@@ -22,6 +22,9 @@ import AutoIcon from "../icons/auto.svg";
 import BottomIcon from "../icons/bottom.svg";
 import StopIcon from "../icons/pause.svg";
 
+import MicrophoneIcon from "../icons/microphone.svg";
+import SpeakerIcon from "../icons/loudspeaker.svg";
+
 import {
   ChatMessage,
   SubmitKey,
@@ -61,6 +64,7 @@ import { useMaskStore } from "../store/mask";
 import { useCommand } from "../command";
 import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
+import { log } from "console";
 
 const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
   loading: () => <LoadingIcon />,
@@ -308,6 +312,10 @@ export function ChatActions(props: {
   scrollToBottom: () => void;
   showPromptHints: () => void;
   hitBottom: boolean;
+  voiceInput: boolean;
+  handleVoiceInput: () => void;
+  voiceOutput: boolean;
+  handleVoiceOutput: () => void;
 }) {
   const config = useAppConfig();
   const navigate = useNavigate();
@@ -398,6 +406,24 @@ export function ChatActions(props: {
       >
         <BreakIcon />
       </div>
+
+      <div
+        className={`${chatStyle["chat-voice-action"]} ${
+          !props.voiceInput ? "unclicked" : "clicked"
+        }`}
+        onClick={props.handleVoiceInput}
+      >
+        <MicrophoneIcon />
+      </div>
+
+      <div
+        className={`${chatStyle["chat-input-action"]} ${
+          !props.voiceOutput ? "unclicked" : "clicked"
+        }`}
+        onClick={props.handleVoiceOutput}
+      >
+        <SpeakerIcon />
+      </div>
     </div>
   );
 }
@@ -421,8 +447,21 @@ export function Chat() {
   const { submitKey, shouldSubmit } = useSubmitHandler();
   const { scrollRef, setAutoScroll, scrollToBottom } = useScrollToBottom();
   const [hitBottom, setHitBottom] = useState(true);
+  const [voiceInput, setVoiceInput] = useState(false);
+  const [voiceOutput, setVoiceOutput] = useState(false);
   const isMobileScreen = useMobileScreen();
   const navigate = useNavigate();
+
+  // voice module
+  const handleVoiceInput = () => {
+    setVoiceInput(!voiceInput);
+    // *** do something ***
+  };
+
+  const handleVoiceOutput = () => {
+    setVoiceOutput(!voiceOutput);
+    // *** do something ***
+  };
 
   const onChatBodyScroll = (e: HTMLElement) => {
     const isTouchBottom = e.scrollTop + e.clientHeight >= e.scrollHeight - 100;
@@ -844,6 +883,10 @@ export function Chat() {
           showPromptModal={() => setShowPromptModal(true)}
           scrollToBottom={scrollToBottom}
           hitBottom={hitBottom}
+          voiceInput={voiceInput}
+          handleVoiceInput={() => handleVoiceInput()}
+          voiceOutput={voiceOutput}
+          handleVoiceOutput={() => handleVoiceOutput()}
           showPromptHints={() => {
             // Click again to close
             if (promptHints.length > 0) {
