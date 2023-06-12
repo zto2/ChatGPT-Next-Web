@@ -1,5 +1,5 @@
 import { useDebouncedCallback } from "use-debounce";
-import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
@@ -26,22 +26,21 @@ import MicrophoneIcon from "../icons/microphone.svg";
 import SpeakerIcon from "../icons/loudspeaker.svg";
 
 import {
-  ChatMessage,
-  SubmitKey,
-  useChatStore,
   BOT_HELLO,
+  ChatMessage,
   createMessage,
-  useAccessStore,
-  Theme,
-  useAppConfig,
   DEFAULT_TOPIC,
+  SubmitKey,
+  Theme,
+  useAccessStore,
+  useAppConfig,
+  useChatStore,
 } from "../store";
 
 import {
-  copyToClipboard,
-  downloadAs,
-  selectOrCopy,
   autoGrowTextArea,
+  copyToClipboard,
+  selectOrCopy,
   useMobileScreen,
 } from "../utils";
 
@@ -64,7 +63,6 @@ import { useMaskStore } from "../store/mask";
 import { useCommand } from "../command";
 import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
-import { log } from "console";
 
 const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
   loading: () => <LoadingIcon />,
@@ -443,6 +441,9 @@ export function Chat() {
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [userInput, setUserInput] = useState("");
+  const recognition = new window.webkitSpeechRecognition();
+  recognition.lang = "zh-CN";
+
   const [isLoading, setIsLoading] = useState(false);
   const { submitKey, shouldSubmit } = useSubmitHandler();
   const { scrollRef, setAutoScroll, scrollToBottom } = useScrollToBottom();
@@ -456,6 +457,24 @@ export function Chat() {
   const handleVoiceInput = () => {
     setVoiceInput(!voiceInput);
     // *** do something ***
+    //判断voiceInput的状态，如果是true，就表示开始识别，finalInput接受语音输入的内容
+    if (voiceInput) {
+      recognition.start();
+      console.log("Ready to receive speech input from user.");
+      recordVoice();
+    } else {
+      recognition.stop();
+    }
+  };
+
+  const recordVoice = () => {
+    recognition.onresult = (event) => {
+      const current = event.resultIndex;
+      setUserInput(event.results[current][0].transcript);
+    };
+    if (voiceInput) {
+      //recognition.start();
+    }
   };
 
   const handleVoiceOutput = () => {
