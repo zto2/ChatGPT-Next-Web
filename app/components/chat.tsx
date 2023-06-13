@@ -72,6 +72,7 @@ import { ExportMessageModal } from "./exporter";
 
 let listen = false;
 let speak = false;
+let readed = [] as number[];
 
 const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
   loading: () => <LoadingIcon />,
@@ -489,10 +490,11 @@ export function Chat() {
 
   const handleVoiceOutput = () => {
     setVoiceOutput(!voiceOutput);
+    speak = !speak;
   };
 
   const speakVoice = (text: string) => {
-    if (voiceOutput) {
+    if (speak) {
       const utterance = new SpeechSynthesisUtterance(text);
       synth.speak(utterance);
     }
@@ -823,12 +825,16 @@ export function Chat() {
           const showTyping = message.preview || message.streaming;
           const shouldShowClearContextDivider = i === clearContextIndex - 1;
 
-          let readed = [] as number[];
-          //如果角色不是用户，就调用speak读出来;需要加功能，读过的就不再读了
-          if (!isUser) {
-            speakVoice(message.content);
-            // console.log(message.id, message.date);
-            //readed.push(message.id)
+          //如果角色不是用户，并且没被读过，就调用speak读出来
+          if (
+            !isUser &&
+            message.id != undefined &&
+            !readed.includes(message.id)
+          ) {
+            if (message.streaming == false) {
+              readed.push(message.id);
+              speakVoice(message.content);
+            }
           }
 
           return (
