@@ -1,5 +1,11 @@
 import { useDebouncedCallback } from "use-debounce";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 
 import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
@@ -63,7 +69,9 @@ import { useMaskStore } from "../store/mask";
 import { useCommand } from "../command";
 import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
-import { read } from "fs";
+
+let listen = false;
+let speak = false;
 
 const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
   loading: () => <LoadingIcon />,
@@ -458,13 +466,13 @@ export function Chat() {
   // voice module
   const handleVoiceInput = () => {
     setVoiceInput(!voiceInput);
-    // *** do something ***
-    //判断voiceInput的状态，如果是true，就表示开始识别，finalInput接受语音输入的内容
-    if (!voiceInput) {
+    listen = !listen;
+    if (listen) {
       recognition.start();
       console.log("Ready to receive speech input from user.");
       recordVoice();
     } else {
+      console.log("Stop listening.");
       recognition.stop();
     }
   };
@@ -472,11 +480,10 @@ export function Chat() {
   const recordVoice = () => {
     recognition.onresult = (event) => {
       const current = event.resultIndex;
-      setUserInput(event.results[0][0].transcript);
+      if (listen) setUserInput(event.results[0][0].transcript);
     };
     recognition.addEventListener("end", (): void => {
-      console.log("end");
-      recognition.start();
+      if (listen) recognition.start();
     });
   };
 
@@ -485,7 +492,7 @@ export function Chat() {
   };
 
   const speakVoice = (text: string) => {
-    if (!voiceOutput) {
+    if (voiceOutput) {
       const utterance = new SpeechSynthesisUtterance(text);
       synth.speak(utterance);
     }
@@ -820,7 +827,7 @@ export function Chat() {
           //如果角色不是用户，就调用speak读出来;需要加功能，读过的就不再读了
           if (!isUser) {
             speakVoice(message.content);
-            console.log(message.id, message.date);
+            // console.log(message.id, message.date);
             //readed.push(message.id)
           }
 
