@@ -63,6 +63,7 @@ import { useMaskStore } from "../store/mask";
 import { useCommand } from "../command";
 import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
+import { read } from "fs";
 
 const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
   loading: () => <LoadingIcon />,
@@ -442,6 +443,7 @@ export function Chat() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [userInput, setUserInput] = useState("");
   const recognition = new window.webkitSpeechRecognition();
+  const synth = window.speechSynthesis;
   recognition.lang = "zh-CN";
 
   const [isLoading, setIsLoading] = useState(false);
@@ -458,7 +460,7 @@ export function Chat() {
     setVoiceInput(!voiceInput);
     // *** do something ***
     //判断voiceInput的状态，如果是true，就表示开始识别，finalInput接受语音输入的内容
-    if (voiceInput) {
+    if (!voiceInput) {
       recognition.start();
       console.log("Ready to receive speech input from user.");
       recordVoice();
@@ -470,16 +472,23 @@ export function Chat() {
   const recordVoice = () => {
     recognition.onresult = (event) => {
       const current = event.resultIndex;
-      setUserInput(event.results[current][0].transcript);
+      setUserInput(event.results[0][0].transcript);
     };
-    if (voiceInput) {
-      //recognition.start();
-    }
+    recognition.addEventListener("end", (): void => {
+      console.log("end");
+      recognition.start();
+    });
   };
 
   const handleVoiceOutput = () => {
     setVoiceOutput(!voiceOutput);
-    // *** do something ***
+  };
+
+  const speakVoice = (text: string) => {
+    if (!voiceOutput) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      synth.speak(utterance);
+    }
   };
 
   const onChatBodyScroll = (e: HTMLElement) => {
@@ -805,8 +814,15 @@ export function Chat() {
             i > 0 &&
             !(message.preview || message.content.length === 0);
           const showTyping = message.preview || message.streaming;
-
           const shouldShowClearContextDivider = i === clearContextIndex - 1;
+
+          let readed = [] as number[];
+          //如果角色不是用户，就调用speak读出来;需要加功能，读过的就不再读了
+          if (!isUser) {
+            speakVoice(message.content);
+            console.log(message.id, message.date);
+            //readed.push(message.id)
+          }
 
           return (
             <>
