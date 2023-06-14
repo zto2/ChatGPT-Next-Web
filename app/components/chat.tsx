@@ -69,6 +69,7 @@ import { useMaskStore } from "../store/mask";
 import { useCommand } from "../command";
 import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
+import { length } from "spark-md5";
 
 let listen = false;
 let speak = false;
@@ -480,17 +481,33 @@ export function Chat() {
 
   const recordVoice = () => {
     recognition.onresult = (event) => {
-      const current = event.resultIndex;
-      if (listen) setUserInput(event.results[0][0].transcript);
+      //const current = event.resultIndex;
+      if (listen) {
+        setUserInput(event.results[0][0].transcript);
+        doSubmit(event.results[0][0].transcript);
+      }
     };
+    //会一直监听
     recognition.addEventListener("end", (): void => {
-      if (listen) recognition.start();
+      //如果userInput非空(长度大于0)，则发送
+      if (listen) {
+        console.log("Restart listening.");
+        recognition.start();
+      }
     });
   };
+  recognition.addEventListener("error", (event) => {
+    console.error(`Speech recognition error detected: ${event.error}`);
+  });
 
   const handleVoiceOutput = () => {
     setVoiceOutput(!voiceOutput);
     speak = !speak;
+    if (!speak) {
+      synth.pause();
+      console.log("Stop speaking.");
+      synth.cancel();
+    }
   };
 
   const speakVoice = (text: string) => {
