@@ -458,8 +458,6 @@ export function ChatActions(props: {
         }}
       />
 
-      <BreakIcon />
-
       <div
         className={`${chatStyle["chat-voice-action"]} ${
           !props.voiceInput ? "unclicked" : "clicked"
