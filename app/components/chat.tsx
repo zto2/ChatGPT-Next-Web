@@ -69,7 +69,6 @@ import { useMaskStore } from "../store/mask";
 import { useCommand } from "../command";
 import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
-import { length } from "spark-md5";
 
 let listen = false;
 let speak = false;
