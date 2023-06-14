@@ -22,6 +22,9 @@ import AutoIcon from "../icons/auto.svg";
 import BottomIcon from "../icons/bottom.svg";
 import StopIcon from "../icons/pause.svg";
 
+import MicrophoneIcon from "../icons/microphone.svg";
+import SpeakerIcon from "../icons/loudspeaker.svg";
+
 import {
   ChatMessage,
   SubmitKey,
@@ -61,6 +64,10 @@ import { useMaskStore } from "../store/mask";
 import { useCommand } from "../command";
 import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
+
+let listen = false;
+let speak = false;
+let readed = [] as number[];
 
 const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
   loading: () => <LoadingIcon />,
@@ -359,6 +366,10 @@ export function ChatActions(props: {
   scrollToBottom: () => void;
   showPromptHints: () => void;
   hitBottom: boolean;
+  voiceInput: boolean;
+  handleVoiceInput: () => void;
+  voiceOutput: boolean;
+  handleVoiceOutput: () => void;
 }) {
   const config = useAppConfig();
   const navigate = useNavigate();
@@ -446,6 +457,26 @@ export function ChatActions(props: {
           });
         }}
       />
+
+      <BreakIcon />
+
+      <div
+        className={`${chatStyle["chat-voice-action"]} ${
+          !props.voiceInput ? "unclicked" : "clicked"
+        }`}
+        onClick={props.handleVoiceInput}
+      >
+        <MicrophoneIcon />
+      </div>
+
+      <div
+        className={`${chatStyle["chat-input-action"]} ${
+          !props.voiceOutput ? "unclicked" : "clicked"
+        }`}
+        onClick={props.handleVoiceOutput}
+      >
+        <SpeakerIcon />
+      </div>
     </div>
   );
 }
@@ -465,12 +496,79 @@ export function Chat() {
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [userInput, setUserInput] = useState("");
+  const recognition = new window.webkitSpeechRecognition();
+  const synth = window.speechSynthesis;
+  recognition.lang = "zh-CN";
+
   const [isLoading, setIsLoading] = useState(false);
   const { submitKey, shouldSubmit } = useSubmitHandler();
   const { scrollRef, setAutoScroll, scrollToBottom } = useScrollToBottom();
   const [hitBottom, setHitBottom] = useState(true);
+  const [voiceInput, setVoiceInput] = useState(false);
+  const [voiceOutput, setVoiceOutput] = useState(false);
   const isMobileScreen = useMobileScreen();
   const navigate = useNavigate();
+
+  const sleep = (ms: number): Promise<void> => {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  };
+
+  // voice module
+  const handleVoiceInput = () => {
+    setVoiceInput(!voiceInput);
+    listen = !listen;
+    if (listen) {
+      recognition.start();
+      console.log("listen:" + listen);
+      console.log("Ready to receive speech input from user.");
+      recordVoice();
+    } else {
+      console.log("listen:" + listen);
+      console.log("Stop listening.");
+      recognition.stop();
+    }
+  };
+
+  const recordVoice = () => {
+    recognition.onresult = (event) => {
+      //const current = event.resultIndex;
+      if (listen) {
+        setUserInput(event.results[0][0].transcript);
+        doSubmit(event.results[0][0].transcript);
+      }
+    };
+    //会一直监听
+    recognition.addEventListener("end", (): void => {
+      //如果userInput非空(长度大于0)，则发送
+      if (listen) {
+        console.log("listen:" + listen);
+        console.log("Restart listening.");
+        recognition.start();
+      }
+    });
+  };
+  recognition.addEventListener("error", (event) => {
+    console.error(`Speech recognition error detected: ${event.error}`);
+  });
+
+  const handleVoiceOutput = () => {
+    setVoiceOutput(!voiceOutput);
+    speak = !speak;
+    if (!speak) {
+      synth.pause();
+      console.log("Stop speaking.");
+      synth.cancel();
+    }
+  };
+
+  const speakVoice = (text: string) => {
+    if (speak) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      synth.speak(utterance);
+    }
+  };
 
   const onChatBodyScroll = (e: HTMLElement) => {
     const isTouchBottom = e.scrollTop + e.clientHeight >= e.scrollHeight - 100;
@@ -798,6 +896,18 @@ export function Chat() {
 
           const shouldShowClearContextDivider = i === clearContextIndex - 1;
 
+          //如果角色不是用户，并且没被读过，就调用speak读出来
+          if (
+            !isUser &&
+            message.id != undefined &&
+            !readed.includes(message.id)
+          ) {
+            if (message.streaming == false) {
+              readed.push(message.id);
+              speakVoice(message.content);
+            }
+          }
+
           return (
             <>
               <div
@@ -892,6 +1002,10 @@ export function Chat() {
           showPromptModal={() => setShowPromptModal(true)}
           scrollToBottom={scrollToBottom}
           hitBottom={hitBottom}
+          voiceInput={voiceInput}
+          handleVoiceInput={() => handleVoiceInput()}
+          voiceOutput={voiceOutput}
+          handleVoiceOutput={() => handleVoiceOutput()}
           showPromptHints={() => {
             // Click again to close
             if (promptHints.length > 0) {

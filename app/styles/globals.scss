@@ -301,6 +301,21 @@ pre {
 .clickable {
   cursor: pointer;
 
+  // &:hover {
+  //   filter: brightness(0.9);
+  // }
+}
+
+.unclicked {
+  cursor: pointer;
+  &:hover {
+    filter: brightness(0.9);
+  }
+}
+
+.clicked {
+  cursor: pointer;
+  filter: brightness(0.8);
   &:hover {
     filter: brightness(0.9);
   }
