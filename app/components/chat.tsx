@@ -464,15 +464,23 @@ export function Chat() {
   const isMobileScreen = useMobileScreen();
   const navigate = useNavigate();
 
+  const sleep = (ms: number): Promise<void> => {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  };
+
   // voice module
   const handleVoiceInput = () => {
     setVoiceInput(!voiceInput);
     listen = !listen;
     if (listen) {
       recognition.start();
+      console.log("listen:" + listen);
       console.log("Ready to receive speech input from user.");
       recordVoice();
     } else {
+      console.log("listen:" + listen);
       console.log("Stop listening.");
       recognition.stop();
     }
@@ -490,8 +498,8 @@ export function Chat() {
     recognition.addEventListener("end", (): void => {
       //如果userInput非空(长度大于0)，则发送
       if (listen) {
+        console.log("listen:" + listen);
         console.log("Restart listening.");
-        recognition.start();
       }
     });
   };
