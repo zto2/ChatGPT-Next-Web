@@ -497,6 +497,7 @@ export function Chat() {
   const recognition = new window.webkitSpeechRecognition();
   const synth = window.speechSynthesis;
   recognition.lang = "zh-CN";
+  recognition.continuous = true;
 
   const [isLoading, setIsLoading] = useState(false);
   const { submitKey, shouldSubmit } = useSubmitHandler();
@@ -521,32 +522,32 @@ export function Chat() {
       recognition.start();
       console.log("listen:" + listen);
       console.log("Ready to receive speech input from user.");
-      recordVoice();
+      //recordVoice();
     } else {
       console.log("listen:" + listen);
       console.log("Stop listening.");
-      recognition.stop();
+      recognition.abort();
     }
   };
 
-  const recordVoice = () => {
-    recognition.onresult = (event) => {
-      //const current = event.resultIndex;
-      if (listen) {
-        setUserInput(event.results[0][0].transcript);
-        doSubmit(event.results[0][0].transcript);
-      }
-    };
-    //会一直监听
-    recognition.addEventListener("end", (): void => {
-      //如果userInput非空(长度大于0)，则发送
-      if (listen) {
-        console.log("listen:" + listen);
-        console.log("Restart listening.");
-        recognition.start();
-      }
-    });
+  recognition.onresult = (event) => {
+    //const current = event.resultIndex;
+    if (listen) {
+      setUserInput(event.results[0][0].transcript);
+      doSubmit(event.results[0][0].transcript);
+      recognition.abort();
+    }
   };
+  //会一直监听
+  // recognition.addEventListener("end", (): void => {
+  //   //如果userInput非空(长度大于0)，则发送
+  //   if (listen) {
+  //     console.log("listen:" + listen);
+  //     console.log("Restart listening.");
+  //     recognition.start();
+  //   }
+  // });
+
   recognition.addEventListener("error", (event) => {
     console.error(`Speech recognition error detected: ${event.error}`);
   });
@@ -903,6 +904,7 @@ export function Chat() {
             if (message.streaming == false) {
               readed.push(message.id);
               speakVoice(message.content);
+              if (listen) recognition.start();
             }
           }
 
