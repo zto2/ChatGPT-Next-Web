@@ -568,19 +568,25 @@ export function Chat() {
       synth.pause();
       console.log("Stop speaking.");
       synth.cancel();
+      if (listen) {
+        recognition.start();
+        restart_Recogni = true;
+        console.log("restart_Recogni in handleVoiceOutput", restart_Recogni);
+      }
     }
   };
 
   const speakVoice = (text: string) => {
     if (speak) {
-      if (listen) {
-        restart_Recogni = true;
-        recognition.start();
-      }
       utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.6;
-      utterance.onend = () => {};
-      synth.speak(utterance);
+      utterance.onend = () => {
+        if (listen) {
+          restart_Recogni = true;
+          recognition.start();
+        }
+      };
+      synth.speak(utterance); //异步
     } else {
       if (listen) {
         restart_Recogni = true;
