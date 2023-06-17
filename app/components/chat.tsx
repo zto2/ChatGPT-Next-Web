@@ -510,11 +510,11 @@ export function Chat() {
   const isMobileScreen = useMobileScreen();
   const navigate = useNavigate();
 
-  const sleep = (ms: number): Promise<void> => {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    });
-  };
+  // const sleep = (ms: number): Promise<void> => {
+  //   return new Promise((resolve) => {
+  //     setTimeout(resolve, ms);
+  //   });
+  // };
 
   // voice module
   const handleVoiceInput = () => {
@@ -568,23 +568,18 @@ export function Chat() {
       synth.pause();
       console.log("Stop speaking.");
       synth.cancel();
-      if (listen) {
-        restart_Recogni = true;
-        recognition.start();
-      }
     }
   };
 
   const speakVoice = (text: string) => {
     if (speak) {
+      if (listen) {
+        restart_Recogni = true;
+        recognition.start();
+      }
       utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.6;
-      utterance.onend = () => {
-        if (listen) {
-          restart_Recogni = true;
-          recognition.start();
-        }
-      };
+      utterance.onend = () => {};
       synth.speak(utterance);
     } else {
       if (listen) {
