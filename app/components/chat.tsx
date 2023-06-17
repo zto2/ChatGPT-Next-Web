@@ -522,18 +522,18 @@ export function Chat() {
     listen = !listen;
     //restart_Recogni = !restart_Recogni;
     if (listen) {
-      recognition.start();
       console.log("start. listen:" + listen);
       console.log("start. restart_Recogni:" + restart_Recogni);
       console.log("Ready to receive speech input from user.");
       restart_Recogni = true;
+      recognition.start();
       //recordVoice();
     } else {
       console.log("end. listen:" + listen);
       console.log("end. restart_Recogni:" + restart_Recogni);
       console.log("Stop listening.");
-      recognition.abort();
       restart_Recogni = false;
+      recognition.abort();
     }
   };
 
@@ -569,8 +569,8 @@ export function Chat() {
       console.log("Stop speaking.");
       synth.cancel();
       if (listen) {
-        recognition.start();
         restart_Recogni = true;
+        recognition.start();
       }
     }
   };
@@ -581,15 +581,15 @@ export function Chat() {
       utterance.rate = 1.6;
       utterance.onend = () => {
         if (listen) {
-          recognition.start();
           restart_Recogni = true;
+          recognition.start();
         }
       };
       synth.speak(utterance);
     } else {
       if (listen) {
-        recognition.start();
         restart_Recogni = true;
+        recognition.start();
       }
     }
   };
