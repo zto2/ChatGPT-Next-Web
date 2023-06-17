@@ -68,6 +68,7 @@ import { ExportMessageModal } from "./exporter";
 let listen = false;
 let speak = false;
 let readed = [] as number[];
+let utterance = new SpeechSynthesisUtterance();
 
 const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
   loading: () => <LoadingIcon />,
@@ -565,18 +566,18 @@ export function Chat() {
     }
   };
 
-  // const speakVoice = (text: string) => {
-  //   if (speak) {
-  //     const utterance = new SpeechSynthesisUtterance(text);
-  //     utterance.rate = 1.2;
-  //     utterance.onend = (event) => {
-  //       console.log(
-  //         `Utterance has finished being spoken after ${event.elapsedTime} seconds.`
-  //       );
-  //     };
-  //     synth.speak(utterance);
-  //   }
-  // };
+  const speakVoice = (text: string) => {
+    if (speak) {
+      utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.25;
+      utterance.onend = () => {
+        if (listen) recognition.start();
+      };
+      synth.speak(utterance);
+    } else {
+      if (listen) recognition.start();
+    }
+  };
 
   const onChatBodyScroll = (e: HTMLElement) => {
     const isTouchBottom = e.scrollTop + e.clientHeight >= e.scrollHeight - 100;
@@ -911,22 +912,8 @@ export function Chat() {
             !readed.includes(message.id)
           ) {
             if (message.streaming == false) {
-              const utterance = new SpeechSynthesisUtterance(message.content);
               readed.push(message.id);
-              if (speak) {
-                utterance.rate = 1.2;
-                utterance.onend = () => {
-                  console.log("啊啊啊");
-                  if (listen) {
-                    recognition.start();
-                  }
-                };
-                synth.speak(utterance);
-              } else {
-                if (listen) {
-                  recognition.start();
-                }
-              }
+              speakVoice(message.content);
             }
           }
 
