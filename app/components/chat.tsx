@@ -573,7 +573,7 @@ export function Chat() {
   const speakVoice = (text: string) => {
     if (speak) {
       utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.25;
+      utterance.rate = 1.5;
       utterance.onend = () => {
         if (listen) {
           recognition.start();
