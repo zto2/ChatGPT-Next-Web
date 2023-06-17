@@ -66,6 +66,7 @@ import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
 
 let listen = false;
+let restart_Recogni = false;
 let speak = false;
 let readed = [] as number[];
 let utterance = new SpeechSynthesisUtterance();
@@ -523,10 +524,12 @@ export function Chat() {
       recognition.start();
       console.log("listen:" + listen);
       console.log("Ready to receive speech input from user.");
+      restart_Recogni = true;
       //recordVoice();
     } else {
       console.log("listen:" + listen);
       console.log("Stop listening.");
+      restart_Recogni = false;
       recognition.abort();
     }
   };
@@ -536,21 +539,22 @@ export function Chat() {
     if (listen) {
       setUserInput(event.results[0][0].transcript);
       doSubmit(event.results[0][0].transcript);
+      restart_Recogni = false;
       recognition.abort();
     }
   };
   //会一直监听
-  // recognition.addEventListener("end", (): void => {
-  //   //如果userInput非空(长度大于0)，则发送
-  //   if (listen) {
-  //     console.log("listen:" + listen);
-  //     console.log("Restart listening.");
-  //     recognition.start();
-  //   }
-  // });
+  recognition.addEventListener("end", (): void => {
+    //如果userInput非空(长度大于0)，则发送
+    if (restart_Recogni) {
+      console.log("Restart listening.");
+      recognition.start();
+    }
+  });
 
   recognition.addEventListener("error", (event) => {
     console.error(`Speech recognition error detected: ${event.error}`);
+    console.log(recognition);
   });
 
   const handleVoiceOutput = () => {
@@ -571,11 +575,17 @@ export function Chat() {
       utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.25;
       utterance.onend = () => {
-        if (listen) recognition.start();
+        if (listen) {
+          recognition.start();
+          restart_Recogni = true;
+        }
       };
       synth.speak(utterance);
     } else {
-      if (listen) recognition.start();
+      if (listen) {
+        recognition.start();
+        restart_Recogni = true;
+      }
     }
   };
 
