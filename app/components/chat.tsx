@@ -570,6 +570,7 @@ export function Chat() {
       synth.cancel();
       if (listen) {
         recognition.start();
+        restart_Recogni = true;
       }
     }
   };
@@ -930,6 +931,7 @@ export function Chat() {
               speakVoice(message.content);
             }
           }
+          //message.content.slice(buffer, 10*(buffer+1))
 
           return (
             <>
