@@ -559,15 +559,24 @@ export function Chat() {
       synth.pause();
       console.log("Stop speaking.");
       synth.cancel();
+      if (listen) {
+        recognition.start();
+      }
     }
   };
 
-  const speakVoice = (text: string) => {
-    if (speak) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      synth.speak(utterance);
-    }
-  };
+  // const speakVoice = (text: string) => {
+  //   if (speak) {
+  //     const utterance = new SpeechSynthesisUtterance(text);
+  //     utterance.rate = 1.2;
+  //     utterance.onend = (event) => {
+  //       console.log(
+  //         `Utterance has finished being spoken after ${event.elapsedTime} seconds.`
+  //       );
+  //     };
+  //     synth.speak(utterance);
+  //   }
+  // };
 
   const onChatBodyScroll = (e: HTMLElement) => {
     const isTouchBottom = e.scrollTop + e.clientHeight >= e.scrollHeight - 100;
@@ -902,9 +911,22 @@ export function Chat() {
             !readed.includes(message.id)
           ) {
             if (message.streaming == false) {
+              const utterance = new SpeechSynthesisUtterance(message.content);
               readed.push(message.id);
-              speakVoice(message.content);
-              if (listen) recognition.start();
+              if (speak) {
+                utterance.rate = 1.2;
+                utterance.onend = () => {
+                  console.log("啊啊啊");
+                  if (listen) {
+                    recognition.start();
+                  }
+                };
+                synth.speak(utterance);
+              } else {
+                if (listen) {
+                  recognition.start();
+                }
+              }
             }
           }
 
