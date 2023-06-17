@@ -499,7 +499,7 @@ export function Chat() {
   const recognition = new window.webkitSpeechRecognition();
   const synth = window.speechSynthesis;
   recognition.lang = "zh-CN";
-  recognition.continuous = true;
+  //recognition.continuous = true;
 
   const [isLoading, setIsLoading] = useState(false);
   const { submitKey, shouldSubmit } = useSubmitHandler();
@@ -520,17 +520,20 @@ export function Chat() {
   const handleVoiceInput = () => {
     setVoiceInput(!voiceInput);
     listen = !listen;
+    //restart_Recogni = !restart_Recogni;
     if (listen) {
       recognition.start();
-      console.log("listen:" + listen);
+      console.log("start. listen:" + listen);
+      console.log("start. restart_Recogni:" + restart_Recogni);
       console.log("Ready to receive speech input from user.");
       restart_Recogni = true;
       //recordVoice();
     } else {
-      console.log("listen:" + listen);
+      console.log("end. listen:" + listen);
+      console.log("end. restart_Recogni:" + restart_Recogni);
       console.log("Stop listening.");
-      restart_Recogni = false;
       recognition.abort();
+      restart_Recogni = false;
     }
   };
 
@@ -540,7 +543,7 @@ export function Chat() {
       setUserInput(event.results[0][0].transcript);
       doSubmit(event.results[0][0].transcript);
       restart_Recogni = false;
-      recognition.abort();
+      recognition.stop();
     }
   };
   //会一直监听
@@ -548,6 +551,7 @@ export function Chat() {
     //如果userInput非空(长度大于0)，则发送
     if (restart_Recogni) {
       console.log("Restart listening.");
+      console.log("restart_Recogni:" + restart_Recogni);
       recognition.start();
     }
   });
@@ -573,7 +577,7 @@ export function Chat() {
   const speakVoice = (text: string) => {
     if (speak) {
       utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.5;
+      utterance.rate = 1.6;
       utterance.onend = () => {
         if (listen) {
           recognition.start();
