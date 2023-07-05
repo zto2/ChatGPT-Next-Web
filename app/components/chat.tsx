@@ -930,6 +930,7 @@ export function Chat() {
             if (message.streaming == false) {
               readed.push(message.id);
               speakVoice(message.content);
+              console.log("message.content:", message.content);
             }
           }
           //message.content.slice(buffer, 10*(buffer+1))
