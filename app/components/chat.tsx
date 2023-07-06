@@ -831,6 +831,12 @@ export function Chat() {
   const isChat = location.pathname === Path.Chat;
   const autoFocus = !isMobileScreen || isChat; // only focus in chat page
 
+  function removeCodeBlocks(text: string): string {
+    // 1、给定一个text文本；2、找到文本text中的2对```符号及2对```符号之间的文本；3、把这些文本全部删除；4、返回删除后的文本
+    const reg = /```[\s\S]*?```/g;
+    return text.replace(reg, "");
+  }
+
   useCommand({
     fill: setUserInput,
     submit: (text) => {
@@ -929,8 +935,33 @@ export function Chat() {
           ) {
             if (message.streaming == false) {
               readed.push(message.id);
-              speakVoice(message.content);
-              console.log("message.content:", message.content);
+              let filteredText: string = message.content;
+              filteredText = removeCodeBlocks(filteredText);
+              speakVoice(filteredText);
+
+              // const inputText: string = `
+              //     Hello, world!
+              //
+              //     Some code block:
+              //     \`\`\`
+              //     const message: string = 'Hello, world!';
+              //     console.log(message);
+              //     \`\`\`
+              //
+              //     Some more text...
+              //
+              //     Another code block:
+              //     \`\`\`javascript
+              //     function sum(a, b) {
+              //       return a + b;
+              //     }
+              //     \`\`\`
+              //
+              //     End of the text.
+              //     `;
+              // console.log("message.content:", message.content);
+              // console.log("filteredText:", filteredText);
+              // console.log(removeCodeBlocks(inputText));
             }
           }
           //message.content.slice(buffer, 10*(buffer+1))
